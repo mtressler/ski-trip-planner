@@ -24,6 +24,18 @@
 .DS_Store
 *.pem
 
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+
+# Local development
+*.swp
+*~
+.env.local.backup
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -39,5 +51,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI agents
+.claude/*
 
 /src/generated/prisma
