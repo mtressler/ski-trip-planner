@@ -67,7 +67,7 @@ export default async function TripDetailPage({
   );
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
+    <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div className="space-y-1">
@@ -168,47 +168,48 @@ export default async function TripDetailPage({
         </Card>
 
         {/* Cost */}
-        {(trip.estimatedCostMin || trip.estimatedCostMax || trip.depositFloor || trip.depositBed) && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Cost Estimate
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {(trip.estimatedCostMin || trip.estimatedCostMax) && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Estimated Total</span>
-                  <span>
-                    {trip.estimatedCostMin && trip.estimatedCostMax
-                      ? `$${Number(trip.estimatedCostMin)}–$${Number(trip.estimatedCostMax)}`
-                      : trip.estimatedCostMax
-                        ? `Up to $${Number(trip.estimatedCostMax)}`
-                        : `From $${Number(trip.estimatedCostMin)}`}
-                  </span>
-                </div>
-              )}
-              {trip.depositFloor && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Deposit (Floor)</span>
-                  <span>${Number(trip.depositFloor)}</span>
-                </div>
-              )}
-              {trip.depositBed && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Deposit (Bed)</span>
-                  <span>${Number(trip.depositBed)}</span>
-                </div>
-              )}
-              {trip.costNotes && (
-                <p className="text-muted-foreground text-xs pt-2 border-t">
-                  {trip.costNotes}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Cost Estimate
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {(trip.estimatedCostMin || trip.estimatedCostMax) ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Estimated Total</span>
+                <span>
+                  {trip.estimatedCostMin && trip.estimatedCostMax
+                    ? `$${Number(trip.estimatedCostMin)}–$${Number(trip.estimatedCostMax)}`
+                    : trip.estimatedCostMax
+                      ? `Up to $${Number(trip.estimatedCostMax)}`
+                      : `From $${Number(trip.estimatedCostMin)}`}
+                </span>
+              </div>
+            ) : null}
+            {trip.depositFloor && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Deposit (Floor)</span>
+                <span>${Number(trip.depositFloor)}</span>
+              </div>
+            )}
+            {trip.depositBed && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Deposit (Bed)</span>
+                <span>${Number(trip.depositBed)}</span>
+              </div>
+            )}
+            {trip.costNotes && (
+              <p className="text-muted-foreground text-xs pt-2 border-t">
+                {trip.costNotes}
+              </p>
+            )}
+            {!trip.estimatedCostMin && !trip.estimatedCostMax && !trip.depositFloor && !trip.depositBed && !trip.costNotes && (
+              <p className="text-muted-foreground italic">No cost information set.</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Details */}
         <Card>

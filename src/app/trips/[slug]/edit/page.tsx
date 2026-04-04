@@ -33,7 +33,7 @@ export default async function EditTripPage({
   const updateTripWithId = updateTrip.bind(null, trip.id);
 
   return (
-    <div className="container max-w-2xl mx-auto px-4 py-8">
+    <div>
       <div className="flex items-center gap-3 mb-6">
         <LinkButton href={`/trips/${trip.slug}`} variant="ghost" size="sm">
           <ArrowLeft className="mr-1 h-4 w-4" />

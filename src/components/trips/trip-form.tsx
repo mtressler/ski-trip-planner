@@ -131,7 +131,7 @@ export function TripForm({
               <Input
                 id="resortWebsite"
                 name="resortWebsite"
-                type="url"
+                type="text"
                 defaultValue={v?.resortWebsite ?? defaultValues.resortWebsite}
                 key={`resortWebsite-${v?.resortWebsite}`}
                 placeholder="https://..."

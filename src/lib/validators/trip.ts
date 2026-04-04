@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+// Treats empty string as undefined before coercing to number
+const optionalInt = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.coerce.number().int().min(1).optional()
+);
+
+const optionalMoney = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z.coerce.number().min(0).optional()
+);
+
 const tripFieldsSchema = z.object({
   name: z.string().min(1, "Trip name is required").max(100),
   resort: z.string().min(1, "Resort name is required").max(100),
@@ -7,19 +18,22 @@ const tripFieldsSchema = z.object({
   country: z.string().max(50).default("US"),
   resortWebsite: z
     .string()
-    .url("Must be a valid URL")
-    .optional()
-    .or(z.literal("")),
+    .transform((val) => {
+      if (!val) return val;
+      return /^https?:\/\//i.test(val) ? val : `https://${val}`;
+    })
+    .pipe(z.string().url("Must be a valid URL").or(z.literal("")))
+    .optional(),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   description: z.string().max(2000).optional(),
   visibility: z.enum(["PRIVATE", "LINK_ONLY", "PUBLIC"]).default("LINK_ONLY"),
-  capacityMin: z.coerce.number().int().min(1).optional(),
-  capacityMax: z.coerce.number().int().min(1).optional(),
-  estimatedCostMin: z.coerce.number().min(0).optional(),
-  estimatedCostMax: z.coerce.number().min(0).optional(),
-  depositFloor: z.coerce.number().min(0).optional(),
-  depositBed: z.coerce.number().min(0).optional(),
+  capacityMin: optionalInt,
+  capacityMax: optionalInt,
+  estimatedCostMin: optionalMoney,
+  estimatedCostMax: optionalMoney,
+  depositFloor: optionalMoney,
+  depositBed: optionalMoney,
   costNotes: z.string().max(1000).optional(),
 });
 

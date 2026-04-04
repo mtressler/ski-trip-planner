@@ -102,24 +102,12 @@ export async function updateTrip(
         description: data.description || null,
       }),
       ...(data.visibility !== undefined && { visibility: data.visibility }),
-      ...(data.capacityMin !== undefined && {
-        capacityMin: data.capacityMin ?? null,
-      }),
-      ...(data.capacityMax !== undefined && {
-        capacityMax: data.capacityMax ?? null,
-      }),
-      ...(data.estimatedCostMin !== undefined && {
-        estimatedCostMin: data.estimatedCostMin ?? null,
-      }),
-      ...(data.estimatedCostMax !== undefined && {
-        estimatedCostMax: data.estimatedCostMax ?? null,
-      }),
-      ...(data.depositFloor !== undefined && {
-        depositFloor: data.depositFloor ?? null,
-      }),
-      ...(data.depositBed !== undefined && {
-        depositBed: data.depositBed ?? null,
-      }),
+      capacityMin: data.capacityMin ?? null,
+      capacityMax: data.capacityMax ?? null,
+      estimatedCostMin: data.estimatedCostMin ?? null,
+      estimatedCostMax: data.estimatedCostMax ?? null,
+      depositFloor: data.depositFloor ?? null,
+      depositBed: data.depositBed ?? null,
       ...(data.costNotes !== undefined && {
         costNotes: data.costNotes || null,
       }),
