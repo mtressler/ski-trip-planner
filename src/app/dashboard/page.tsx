@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Mountain } from "lucide-react";
 import { format } from "date-fns";
+import { Suspense } from "react";
+import { SortSelector } from "@/components/dashboard/sort-selector";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -22,9 +24,30 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-700",
 };
 
-export default async function DashboardPage() {
+type OrderBy =
+  | { createdAt: "asc" | "desc" }
+  | { name: "asc" | "desc" }
+  | { resort: "asc" | "desc" };
+
+function parseSort(sort: string | undefined): OrderBy {
+  switch (sort) {
+    case "name_asc":    return { name: "asc" };
+    case "name_desc":   return { name: "desc" };
+    case "resort_asc":  return { resort: "asc" };
+    case "resort_desc": return { resort: "desc" };
+    default:            return { createdAt: "desc" };
+  }
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
   const session = await requireAuth();
   const userId = session.user.id;
+  const { sort } = await searchParams;
+  const orderBy = parseSort(sort);
 
   const [organizedTrips, memberTrips] = await Promise.all([
     prisma.trip.findMany({
@@ -35,7 +58,7 @@ export default async function DashboardPage() {
       include: {
         _count: { select: { members: { where: { status: "CONFIRMED" } } } },
       },
-      orderBy: { startDate: "asc" },
+      orderBy,
     }),
     prisma.trip.findMany({
       where: {
@@ -46,7 +69,7 @@ export default async function DashboardPage() {
       include: {
         _count: { select: { members: { where: { status: "CONFIRMED" } } } },
       },
-      orderBy: { startDate: "asc" },
+      orderBy,
     }),
   ]);
 
@@ -82,7 +105,14 @@ export default async function DashboardPage() {
         <div className="space-y-6">
           {organizedTrips.length > 0 && (
             <section>
-              <h2 className="text-lg font-semibold mb-3">Trips You Organize</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">Trips You Organize</h2>
+                {allTrips.length > 1 && (
+                  <Suspense>
+                    <SortSelector />
+                  </Suspense>
+                )}
+              </div>
               <div className="grid gap-4">
                 {organizedTrips.map((trip) => (
                   <TripCard key={trip.id} trip={trip} />

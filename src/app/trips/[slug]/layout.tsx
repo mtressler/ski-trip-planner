@@ -18,19 +18,35 @@ export default async function TripLayout({
     select: {
       slug: true,
       name: true,
+      status: true,
       organizers: { select: { userId: true } },
+      members: {
+        where: {
+          status: "CONFIRMED",
+          ...(session?.user?.id ? { userId: session.user.id } : { userId: "none" }),
+        },
+        select: { userId: true },
+      },
     },
   });
 
   if (!trip) notFound();
 
   const isOrganizer =
-    session?.user?.id &&
+    session?.user?.id != null &&
     trip.organizers.some((o) => o.userId === session.user!.id);
+  const isMember = trip.members.length > 0;
+  const showNav = isOrganizer || isMember;
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
-      {isOrganizer && <TripSubNav slug={trip.slug} />}
+      {showNav && (
+        <TripSubNav
+          slug={trip.slug}
+          status={trip.status as "DRAFT" | "INVITING" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"}
+          isOrganizer={isOrganizer}
+        />
+      )}
       {children}
     </div>
   );

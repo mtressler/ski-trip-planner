@@ -61,11 +61,16 @@ export async function submitInterestResponse(
     ? await prisma.interestResponse.findUnique({ where: { editToken } })
     : null;
 
-  // Also check if this email already submitted for this trip (duplicate detection)
-  if (!existingResponse) {
-    existingResponse = await prisma.interestResponse.findUnique({
-      where: { tripId_email: { tripId: trip.id, email: data.email } },
-    });
+  // Check if the submitted email already has a response for this trip
+  const emailConflict = await prisma.interestResponse.findUnique({
+    where: { tripId_email: { tripId: trip.id, email: data.email } },
+  });
+
+  if (emailConflict && emailConflict.id !== existingResponse?.id) {
+    // The email belongs to a different record — merge into it
+    existingResponse = emailConflict;
+  } else if (!existingResponse && emailConflict) {
+    existingResponse = emailConflict;
   }
 
   // Map interest level to status

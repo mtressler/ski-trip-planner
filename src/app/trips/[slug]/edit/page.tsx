@@ -7,6 +7,7 @@ import { LinkButton } from "@/components/link-button";
 import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { DeleteTripButton } from "@/components/trips/delete-trip-button";
+import { CancelTripButton } from "@/components/trips/cancel-trip-button";
 
 export default async function EditTripPage({
   params,
@@ -69,15 +70,27 @@ export default async function EditTripPage({
         submitLabel="Save Changes"
       />
 
-      {trip.status === "DRAFT" && (
-        <div className="mt-8 border-t pt-6">
-          <h2 className="text-lg font-semibold text-destructive mb-2">
-            Danger Zone
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Permanently delete this trip and all associated data.
-          </p>
-          <DeleteTripButton tripId={trip.id} />
+      {(trip.status === "DRAFT" || !["COMPLETED", "CANCELLED"].includes(trip.status)) && (
+        <div className="mt-8 border-t pt-6 space-y-6">
+          <h2 className="text-lg font-semibold text-destructive">Danger Zone</h2>
+
+          {trip.status === "DRAFT" && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Permanently delete this trip and all associated data.
+              </p>
+              <DeleteTripButton tripId={trip.id} />
+            </div>
+          )}
+
+          {!["DRAFT", "COMPLETED", "CANCELLED"].includes(trip.status) && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Cancel this trip. All interested and confirmed members will be notified by email.
+              </p>
+              <CancelTripButton tripId={trip.id} />
+            </div>
+          )}
         </div>
       )}
     </div>

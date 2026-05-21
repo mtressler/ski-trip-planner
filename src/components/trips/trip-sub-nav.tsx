@@ -4,18 +4,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { label: "Overview", href: "" },
-  { label: "Invitations", href: "/invitations" },
+type TripStatus = "DRAFT" | "INVITING" | "CONFIRMED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+
+const STATUS_ORDER: TripStatus[] = ["DRAFT", "INVITING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
+
+function atLeast(status: TripStatus, min: TripStatus) {
+  return STATUS_ORDER.indexOf(status) >= STATUS_ORDER.indexOf(min);
+}
+
+const tabs: { label: string; href: string; visibleFrom: TripStatus; organizerOnly?: boolean }[] = [
+  { label: "Overview",        href: "",                visibleFrom: "DRAFT"     },
+  { label: "Invitations",     href: "/invitations",    visibleFrom: "INVITING",  organizerOnly: true },
+  { label: "Attendees",       href: "/attendees",      visibleFrom: "CONFIRMED", organizerOnly: true },
+  { label: "Expenses",        href: "/expenses",       visibleFrom: "CONFIRMED" },
+  { label: "Transportation",  href: "/transportation", visibleFrom: "CONFIRMED" },
+  { label: "Transfers",       href: "/transfers",      visibleFrom: "CONFIRMED", organizerOnly: true },
+  { label: "Updates",         href: "/updates",        visibleFrom: "CONFIRMED" },
+  { label: "Info",            href: "/info",           visibleFrom: "CONFIRMED" },
+  { label: "Housing",         href: "/housing",        visibleFrom: "DRAFT",     organizerOnly: true },
 ];
 
-export function TripSubNav({ slug }: { slug: string }) {
+export function TripSubNav({ slug, status, isOrganizer }: { slug: string; status: TripStatus; isOrganizer: boolean }) {
   const pathname = usePathname();
   const base = `/trips/${slug}`;
 
+  const visibleTabs = tabs.filter((t) => atLeast(status, t.visibleFrom) && (!t.organizerOnly || isOrganizer));
+
   return (
     <nav className="flex gap-1 border-b mb-6">
-      {tabs.map((tab) => {
+      {visibleTabs.map((tab) => {
         const href = `${base}${tab.href}`;
         const isActive =
           tab.href === ""

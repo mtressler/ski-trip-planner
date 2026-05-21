@@ -18,8 +18,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verifyRequest: "/check-email",
   },
   callbacks: {
-    session({ session, user }) {
+    async session({ session, user }) {
       session.user.id = user.id;
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { role: true },
+      });
+      session.user.role = dbUser?.role ?? "USER";
       return session;
     },
   },

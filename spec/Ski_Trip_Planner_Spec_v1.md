@@ -1148,7 +1148,16 @@ Real-time or polling-based notification bell in the nav bar for events like: new
 
 Native iOS and Android apps using React Native, sharing business logic with the Next.js frontend via a shared TypeScript package.
 
-### 10.12 Year-over-Year Trip Analytics (v3)
+### 10.13 Photo Gallery (v2)
+
+A trip photo gallery at `/trips/[slug]/photos`. Confirmed participants and organizers can upload photos; all confirmed participants can view them. Requires integration with a file storage service (Cloudinary or Supabase Storage). The `TripPhoto` model (section 4.9) is already in the schema to support this feature without a future migration.
+
+- **Upload**: Participants upload images directly to cloud storage; a `TripPhoto` record is created with the URL, uploader, and optional caption.
+- **Gallery view**: Responsive photo grid, lightbox for full-size view.
+- **Captions**: Optional free-text caption per photo.
+- **Delete**: Uploader or any organizer can delete a photo.
+
+### 10.14 Year-over-Year Trip Analytics (v3)
 
 An organizer dashboard for recurring trips that compares key metrics across years. Trips can be grouped manually by the organizer or automatically matched by resort name.
 

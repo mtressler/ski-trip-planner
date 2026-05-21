@@ -5,14 +5,20 @@ export const interestResponseSchema = z.object({
   email: z.string().email("Valid email required"),
   phone: z.string().max(20).optional(),
   interestLevel: z.enum(["INTERESTED", "PENDING", "NOT_INTERESTED"]),
-  guestCount: z.coerce.number().int().min(1).max(20).default(1),
+  guestCount: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(1, "Party size must be at least 1").max(20)
+  ),
   rentalNeeds: z
     .enum(["NONE", "SKIS", "SNOWBOARD", "BOOTS", "FULL_PACKAGE"])
     .default("NONE"),
   skillLevel: z
     .enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"])
     .default("BEGINNER"),
-  skiDays: z.coerce.number().int().min(0).max(14).default(0),
+  skiDays: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(0, "Must be 0 or more").max(14)
+  ),
   travelMode: z.enum(["DRIVING", "FLYING"]).default("DRIVING"),
   schoolYear: z
     .enum(["FRESHMAN", "SOPHOMORE", "JUNIOR", "SENIOR", "ALUM", "OTHER"])

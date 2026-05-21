@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth-guard";
 import { createTripSchema, updateTripSchema } from "@/lib/validators/trip";
 import { generateUniqueSlug } from "@/lib/utils/slug";
+import { sendEmail } from "@/lib/email";
+import { TripCancelledEmail } from "@/emails/trip-cancelled";
+import { format } from "date-fns";
 
 export async function createTrip(
   _prevState: { error?: Record<string, string[] | undefined> } | undefined,
@@ -152,4 +155,100 @@ export async function deleteTrip(tripId: string) {
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
+}
+
+export async function cancelTrip(tripId: string) {
+  const session = await requireAuth();
+
+  const organizer = await prisma.tripOrganizer.findFirst({
+    where: { tripId, userId: session.user.id },
+  });
+  if (!organizer) return { error: "Not authorized" };
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: {
+      status: true,
+      slug: true,
+      name: true,
+      resort: true,
+      startDate: true,
+      endDate: true,
+      organizers: {
+        select: { user: { select: { name: true, email: true } } },
+      },
+    },
+  });
+  if (!trip) return { error: "Trip not found" };
+  if (trip.status === "CANCELLED") return { error: "Trip is already cancelled" };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { status: "CANCELLED" },
+  });
+
+  const organizerName = trip.organizers[0]?.user.name ?? "The organizer";
+  const startDate = format(trip.startDate, "MMM d, yyyy");
+  const endDate = format(trip.endDate, "MMM d, yyyy");
+
+  // Collect emails from confirmed members and active interest responses
+  const [members, interestResponses] = await Promise.all([
+    prisma.tripMember.findMany({
+      where: { tripId, status: "CONFIRMED" },
+      select: { user: { select: { email: true } } },
+    }),
+    prisma.interestResponse.findMany({
+      where: { tripId, status: { in: ["PENDING", "INTERESTED", "WAITLISTED", "CONFIRMED"] } },
+      select: { email: true },
+    }),
+  ]);
+
+  const emailSet = new Set<string>();
+  for (const m of members) if (m.user?.email) emailSet.add(m.user.email);
+  for (const r of interestResponses) if (r.email) emailSet.add(r.email);
+  const recipients = Array.from(emailSet);
+
+  if (recipients.length > 0) {
+    await sendEmail({
+      to: recipients,
+      subject: `${trip.name} has been cancelled`,
+      react: TripCancelledEmail({
+        tripName: trip.name,
+        resort: trip.resort,
+        startDate,
+        endDate,
+        organizerName,
+      }),
+    });
+  }
+
+  revalidatePath(`/trips/${trip.slug}`);
+  revalidatePath(`/trips/${trip.slug}/edit`);
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function launchTrip(tripId: string) {
+  const session = await requireAuth();
+
+  const organizer = await prisma.tripOrganizer.findFirst({
+    where: { tripId, userId: session.user.id },
+  });
+  if (!organizer) return { error: "Not authorized" };
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { status: true, slug: true },
+  });
+  if (!trip) return { error: "Trip not found" };
+  if (trip.status !== "DRAFT") return { error: "Trip is already launched" };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { status: "INVITING" },
+  });
+
+  revalidatePath(`/trips/${trip.slug}`);
+  revalidatePath(`/trips/${trip.slug}/invitations`);
+  return { success: true };
 }

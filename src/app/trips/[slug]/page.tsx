@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { CopyInviteButton } from "@/components/trips/copy-invite-button";
+import { LaunchTripButton } from "@/components/trips/launch-trip-button";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -86,7 +87,11 @@ export default async function TripDetailPage({
         </div>
         {isOrganizer && (
           <div className="flex gap-2">
-            <CopyInviteButton inviteToken={trip.inviteToken} />
+            {trip.status === "DRAFT" ? (
+              <LaunchTripButton tripId={trip.id} />
+            ) : (
+              <CopyInviteButton inviteToken={trip.inviteToken} />
+            )}
             <LinkButton href={`/trips/${trip.slug}/edit`} variant="outline" size="sm">
               <Pencil className="mr-1.5 h-3.5 w-3.5" />
               Edit

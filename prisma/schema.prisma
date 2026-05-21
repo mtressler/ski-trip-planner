@@ -354,6 +354,7 @@ model Expense {
   date        DateTime
   receiptUrl  String?
   notes       String?
+  isSettledUp Boolean         @default(false)
   createdAt   DateTime        @default(now())
 
   trip   Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -436,11 +437,12 @@ model TransportationDetail {
   rentingCar             Boolean?
 
   // Driving fields
-  driveRole          DriverRole?
-  driveArrivalTime   DateTime?
-  driveDepartureTime DateTime?
-  extraSeats         Int?
-  driverTripMemberId String?
+  driveRole           DriverRole?
+  driveArrivalTime    DateTime?
+  driveDepartureTime  DateTime?
+  confirmedPassengers Int?
+  extraSeats          Int?
+  driverTripMemberId  String?
 
   comments  String?
   createdAt DateTime @default(now())

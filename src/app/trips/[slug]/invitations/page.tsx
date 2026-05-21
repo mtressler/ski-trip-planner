@@ -4,6 +4,9 @@ import { requireAuth } from "@/lib/auth-guard";
 import { sendInvitations } from "@/server/actions/invitation";
 import { SendInvitesForm } from "@/components/invitations/send-invites-form";
 import { ResendButton } from "@/components/invitations/resend-button";
+import { DevSeedPanel } from "@/components/invitations/dev-seed-panel";
+import { ConfirmButton } from "@/components/invitations/confirm-button";
+import { BulkConfirmButton } from "@/components/invitations/bulk-confirm-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -45,7 +48,13 @@ export default async function InvitationsPage({
     include: {
       organizers: { select: { userId: true } },
       interestResponses: {
+        include: {
+          tripMember: { select: { status: true } },
+        },
         orderBy: { submittedAt: "desc" },
+      },
+      members: {
+        select: { status: true },
       },
     },
   });
@@ -64,11 +73,15 @@ export default async function InvitationsPage({
   // Stats
   const stats = {
     total: trip.interestResponses.length,
+    confirmed: trip.interestResponses.filter((r) => r.status === "CONFIRMED").length,
     interested: trip.interestResponses.filter((r) => r.status === "INTERESTED").length,
     maybe: trip.interestResponses.filter((r) => r.status === "PENDING" && r.name).length,
     noResponse: trip.interestResponses.filter((r) => r.status === "PENDING" && !r.name).length,
     notInterested: trip.interestResponses.filter((r) => r.status === "NOT_INTERESTED").length,
+    withdrawn: trip.members.filter((m) => m.status === "WITHDRAWN").length,
+    removed: trip.members.filter((m) => m.status === "REMOVED").length,
   };
+  const hasInterested = stats.interested > 0;
 
   return (
     <div className="space-y-6">
@@ -84,6 +97,9 @@ export default async function InvitationsPage({
           <SendInvitesForm action={sendAction} />
         </CardContent>
       </Card>
+
+      {/* Dev: seed random responses */}
+      {isDev && <DevSeedPanel tripId={trip.id} />}
 
       {/* Dev: show invite links directly */}
       {isDev && trip.interestResponses.length > 0 && (
@@ -110,15 +126,33 @@ export default async function InvitationsPage({
         </Card>
       )}
 
+      {/* Bulk confirm */}
+      {hasInterested && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Confirm Attendees</CardTitle>
+            <CardDescription>
+              {stats.interested} interested response{stats.interested !== 1 ? "s" : ""} ready to confirm.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BulkConfirmButton tripId={trip.id} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats */}
       {stats.total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: "Total", value: stats.total },
+            { label: "Confirmed", value: stats.confirmed },
             { label: "Interested", value: stats.interested },
             { label: "Maybe", value: stats.maybe },
             { label: "No Response", value: stats.noResponse },
             { label: "Not Interested", value: stats.notInterested },
+            { label: "Withdrawn", value: stats.withdrawn },
+            { label: "Removed", value: stats.removed },
           ].map((stat) => (
             <Card key={stat.label}>
               <CardContent className="pt-4 pb-4 text-center">
@@ -167,7 +201,11 @@ export default async function InvitationsPage({
                         {response.email}
                       </td>
                       <td className="py-2.5 pr-4">
-                        {!response.name && response.status === "PENDING" ? (
+                        {response.tripMember?.status === "REMOVED" ? (
+                          <Badge variant="secondary" className="bg-red-100 text-red-500">
+                            Removed
+                          </Badge>
+                        ) : !response.name && response.status === "PENDING" ? (
                           <Badge variant="secondary" className="bg-gray-100 text-gray-500">
                             No Response
                           </Badge>
@@ -187,12 +225,20 @@ export default async function InvitationsPage({
                           : "—"}
                       </td>
                       <td className="py-2.5">
-                        {response.status === "PENDING" && (
-                          <ResendButton
-                            tripId={trip.id}
-                            responseId={response.id}
-                          />
-                        )}
+                        <div className="flex gap-2">
+                          {response.status === "INTERESTED" && (
+                            <ConfirmButton
+                              tripId={trip.id}
+                              responseId={response.id}
+                            />
+                          )}
+                          {response.status === "PENDING" && (
+                            <ResendButton
+                              tripId={trip.id}
+                              responseId={response.id}
+                            />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

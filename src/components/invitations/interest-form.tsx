@@ -51,10 +51,17 @@ export function InterestForm({ action, defaultValues, invitedEmail }: InterestFo
   const [schoolYear, setSchoolYear] = useState(
     defaultValues?.schoolYear ?? "FRESHMAN"
   );
+  const [guestCount, setGuestCount] = useState(
+    String(defaultValues?.guestCount ?? 1)
+  );
 
   useEffect(() => {
     if (v?.schoolYear) setSchoolYear(v.schoolYear);
   }, [v?.schoolYear]);
+
+  useEffect(() => {
+    if (v?.guestCount) setGuestCount(v.guestCount);
+  }, [v?.guestCount]);
 
   const dv = defaultValues;
 
@@ -155,9 +162,10 @@ export function InterestForm({ action, defaultValues, invitedEmail }: InterestFo
                 type="number"
                 min={1}
                 max={20}
-                defaultValue={v?.guestCount ?? dv?.guestCount ?? 1}
-                key={`guestCount-${v?.guestCount}`}
+                value={guestCount}
+                onChange={(e) => setGuestCount(e.target.value)}
               />
+              <FieldError errors={errors} field="guestCount" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="skiDays">Number of Ski Days</Label>
@@ -170,6 +178,7 @@ export function InterestForm({ action, defaultValues, invitedEmail }: InterestFo
                 defaultValue={v?.skiDays ?? dv?.skiDays ?? 0}
                 key={`skiDays-${v?.skiDays}`}
               />
+              <FieldError errors={errors} field="skiDays" />
             </div>
           </div>
 
